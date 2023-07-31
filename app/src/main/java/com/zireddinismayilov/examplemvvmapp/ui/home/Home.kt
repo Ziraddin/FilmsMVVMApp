@@ -1,12 +1,14 @@
 package com.zireddinismayilov.examplemvvmapp.ui.home
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.zireddinismayilov.examplemvvmapp.data.response.MovieItem
 import com.zireddinismayilov.examplemvvmapp.databinding.ActivityHomeBinding
+import com.zireddinismayilov.examplemvvmapp.utils.Adapters.MoviesAdapter
 import com.zireddinismayilov.examplemvvmapp.utils.ResponseResult
 
 class Home : AppCompatActivity() {
@@ -19,6 +21,7 @@ class Home : AppCompatActivity() {
         setContentView(binding.root)
         viewModel.getMovies()
         setUpObservers()
+        setUpRefreshing()
     }
 
     private fun setUpObservers() {
@@ -29,8 +32,8 @@ class Home : AppCompatActivity() {
                 }
 
                 is ResponseResult.Success<*> -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.HomeTV.text = (it.data as List<MovieItem>)[0].Title
+                    binding.progressBar.visibility = View.INVISIBLE
+                    setUpRecyclerView(it.data as MutableList<MovieItem>)
                 }
 
                 is ResponseResult.Error -> {
@@ -39,4 +42,21 @@ class Home : AppCompatActivity() {
             }
         })
     }
+
+    private fun setUpRecyclerView(movielist: MutableList<MovieItem>) {
+        binding.MoviesRecyclerView.adapter = MoviesAdapter(movielist, this)
+        binding.MoviesRecyclerView.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+    }
+
+    private fun setUpRefreshing() {
+        binding.swipeRefreshLayout.apply {
+            setOnRefreshListener {
+                setUpObservers()
+                isRefreshing = false
+            }
+        }
+    }
+
+
 }
